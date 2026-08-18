@@ -6,24 +6,26 @@
 const Utils = (() => {
 
   // ─── ID GENERATOR ──────────────────────────────────────────
+  /** @param {string} prefix - ID prefix string @returns {string} Unique identifier */
   function uid(prefix = '') {
     return prefix + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   }
 
   // ─── FORMATTERS ────────────────────────────────────────────
+  /** @param {number} amount - Amount to format @param {string} symbol - Currency symbol @returns {string} Formatted currency string */
   function currency(amount, symbol = '$') {
     return symbol + Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-
+  /** @param {number} n - Number to format @returns {string} Locale-formatted number string */
   function number(n) {
     return Number(n).toLocaleString('en-US');
   }
-
+  /** @param {number} val - Numerator value @param {number} total - Denominator value @returns {string} Rounded percentage string */
   function percent(val, total) {
     if (!total) return '0%';
     return Math.round((val / total) * 100) + '%';
   }
-
+  /** @param {string} isoString - ISO 8601 timestamp @returns {string} Human-readable relative time */
   function timeAgo(isoString) {
     const diff = Date.now() - new Date(isoString).getTime();
     const mins  = Math.floor(diff / 60000);
@@ -605,6 +607,19 @@ const Utils = (() => {
     return tierScore + urgency;
   }
 
+  // ─── INPUT SANITIZATION (XSS Prevention) ──────────────────
+  /** @param {string} str - Raw string to sanitize @returns {string} HTML-escaped safe string for XSS prevention */
+  function sanitizeHTML(str) {
+    if (typeof str !== 'string') return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '/': '&#x2F;' };
+    return str.replace(/[&<>"'\/]/g, c => map[c]);
+  }
+  /** @param {string} str - User input to clean @returns {string} Stripped and trimmed safe string */
+  function sanitizeInput(str) {
+    if (typeof str !== 'string') return '';
+    return str.trim().replace(/[<>"'`]/g, '');
+  }
+
   return {
     uid, currency, number, percent, timeAgo, formatDate, formatDateTime, formatTime,
     dueUrgency, dueLabel, stockLevel, stockClass, priorityLabel, statusLabel, carrierIcon,
@@ -612,6 +627,6 @@ const Utils = (() => {
     Toast, Modal, confirm,
     Charts, Sound,
     fuzzyMatch, filterProducts, filterOrders, sortBy, exportCSV, debounce,
-    orderPriorityScore,
+    orderPriorityScore, sanitizeHTML, sanitizeInput,
   };
 })();

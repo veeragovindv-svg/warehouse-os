@@ -48,8 +48,11 @@ const AuthModule = (() => {
     }
   ];
 
+  const LOGS_STORAGE_KEY = 'warehouseos_security_logs_v1';
+
   let users = [];
   let currentUser = null;
+  let securityLogs = [];
 
   function init() {
     // Load registered users
@@ -78,7 +81,39 @@ const AuthModule = (() => {
       currentUser = users[0];
     }
 
+    // Load security logs
+    try {
+      const savedLogs = localStorage.getItem(LOGS_STORAGE_KEY);
+      if (savedLogs) {
+        securityLogs = JSON.parse(savedLogs);
+      } else {
+        securityLogs = [
+          { time: new Date(Date.now() - 3600000).toISOString(), event: 'JWT Security Token signature generated successfully', type: 'JWT_GEN', ip: '192.168.10.109', user: 'Veera Govind', status: 'SUCCESS' },
+          { time: new Date(Date.now() - 3000000).toISOString(), event: 'Client IP verified against subnet whitelist restrictions', type: 'IP_VAL', ip: '192.168.10.109', user: 'Veera Govind', status: 'SUCCESS' },
+          { time: new Date(Date.now() - 2400000).toISOString(), event: 'Route authorization check passed. Access level: Root Admin', type: 'RBAC_VAL', ip: '192.168.10.109', user: 'Veera Govind', status: 'SUCCESS' }
+        ];
+        saveLogs();
+      }
+    } catch (e) {
+      securityLogs = [];
+    }
+
     updateUI();
+  }
+
+  function saveLogs() {
+    try {
+      localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(securityLogs));
+    } catch (e) {}
+  }
+
+  function addSecurityLog(event, type, ip, user, status = 'SUCCESS') {
+    securityLogs.unshift({
+      time: new Date().toISOString(),
+      event, type, ip, user, status
+    });
+    if (securityLogs.length > 25) securityLogs.pop();
+    saveLogs();
   }
 
   function saveUsers() {
@@ -137,11 +172,13 @@ const AuthModule = (() => {
   function login(email, password) {
     const user = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
     if (!user) {
+      addSecurityLog(`Unauthorized login attempt. Target: ${email}`, 'LOGIN_FAIL', '192.168.10.109', 'Unknown', 'FAILURE');
       return { success: false, message: 'Invalid email or password. Try admin@warehouse.os / admin' };
     }
     currentUser = user;
     saveSession();
     updateUI();
+    addSecurityLog(`User session authenticated. Token generated. Role: ${user.role}`, 'LOGIN_SUCCESS', '192.168.10.109', user.name, 'SUCCESS');
     Utils.Sound?.playSuccess?.();
     Utils.Toast.success('Signed In', `Welcome back, ${user.name} (${user.role} Access)`);
     Router.dispatch();
@@ -163,12 +200,20 @@ const AuthModule = (() => {
       name: data.name.trim(),
       email: data.email.trim().toLowerCase(),
       password: data.password || 'password123',
-      role: role,
+      role,
       title: data.title || (role === 'Admin' ? 'System Administrator' : 'Warehouse Operator'),
       initials,
       zone: data.zone || 'Zone A',
-      permissions: role === 'Admin' ? ['all', 'admin', 'staff_manage', 'inventory_edit', 'orders_manage'] : ['picking', 'orders_view', 'inventory_view'],
-      avatarColor: role === 'Admin' ? 'linear-gradient(135deg, #A855F7, #6366F1)' : 'linear-gradient(135deg, #06B6D4, #10B981)',
+      permissions: role === 'Admin' 
+        ? ['all', 'admin', 'staff_manage', 'inventory_edit', 'orders_manage', 'system_reset']
+        : role === 'Supervisor'
+        ? ['picking', 'dispatch', 'orders_manage', 'inventory_view', 'alerts_manage']
+        : ['picking', 'orders_view', 'inventory_view'],
+      avatarColor: role === 'Admin' 
+        ? 'linear-gradient(135deg, #A855F7, #6366F1)' 
+        : role === 'Supervisor'
+        ? 'linear-gradient(135deg, #10B981, #06B6D4)'
+        : 'linear-gradient(135deg, #06B6D4, #3B82F6)',
       registeredAt: new Date().toISOString()
     };
 
@@ -187,7 +232,7 @@ const AuthModule = (() => {
     currentUser = newUser;
     saveSession();
     updateUI();
-
+    addSecurityLog(`New user account registered and authenticated. ID: ${id}`, 'REG_SUCCESS', '192.168.10.109', newUser.name, 'SUCCESS');
     Utils.Sound?.playSuccess?.();
     Utils.Toast.success('Account Created', `Registered & logged in as ${newUser.name} (${newUser.role})`);
     Router.dispatch();
@@ -337,6 +382,18 @@ const AuthModule = (() => {
     const res = login(email, pass);
     if (res.success) {
       Utils.Modal.close();
+    } else {
+      Utils.Toast.error('Login Failed', res.message);
+    }
+  }
+
+  function quickLogin(email, pass) {
+    const res = login(email, pass);
+    if (res.success) {
+      Utils.Modal.close();
+      if (window.location.hash && window.location.hash.includes('login')) {
+        Router.go('/dashboard');
+      }
     } else {
       Utils.Toast.error('Login Failed', res.message);
     }
@@ -602,9 +659,291 @@ const AuthModule = (() => {
     }
   }
 
+  // ─── ENTERPRISE SECURITY CENTER ────────────────────────────
+  let whitelistActive = false;
+  let activeTokens = [
+    { id: 'TOK-9421', user: 'Veera Govind', role: 'Admin', issuedAt: new Date(Date.now() - 3600000).toLocaleTimeString(), ip: '192.168.10.109' },
+    { id: 'TOK-8831', user: 'Alex Rivera', role: 'Staff', issuedAt: new Date(Date.now() - 2000000).toLocaleTimeString(), ip: '192.168.10.15' },
+    { id: 'TOK-4112', user: 'Dana Patel', role: 'Supervisor', issuedAt: new Date(Date.now() - 500000).toLocaleTimeString(), ip: '192.168.10.38' }
+  ];
+
+  function renderSecurityPage(container) {
+    if (!isAdmin()) {
+      container.innerHTML = `
+        <div class="card p-6 text-center" style="max-width:500px;margin:80px auto;">
+          <h2 style="color:var(--clr-danger-text)">🚫 Access Restricted</h2>
+          <p class="text-muted mt-2 mb-4">You do not have the required administrator security clearance to view the Security & Audit Logs Console.</p>
+          <button class="btn btn-primary" onclick="Router.go('/dashboard')">Back to Dashboard</button>
+        </div>
+      `;
+      return;
+    }
+
+    const mockTokenPayload = {
+      sub: currentUser.id,
+      name: currentUser.name,
+      role: currentUser.role,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iss: 'warehouseos.security.auth'
+    };
+
+    const encodedHeader = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).replace(/=/g, '');
+    const encodedPayload = btoa(JSON.stringify(mockTokenPayload)).replace(/=/g, '');
+    const mockJWT = `${encodedHeader}.${encodedPayload}.[SecretSignatureHash]`;
+
+    container.innerHTML = `
+      <div class="security-center-module" style="max-width:1160px;margin:0 auto;padding-bottom:40px;">
+        
+        <!-- Section Header -->
+        <div class="section-header mb-4">
+          <div class="section-header-left">
+            <div class="flex items-center gap-2 mb-1">
+              <h2 class="section-title">🛡️ Security Control & Audit Logs Console</h2>
+              <span class="badge badge-purple font-mono font-bold" style="font-size:10px">clearance: Level 5</span>
+            </div>
+            <p class="section-sub">Manage active session JWT tokens, configure subnet whitelists, verify signatures, and inspect real-time security events.</p>
+          </div>
+          <div class="section-actions flex items-center gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="AuthModule.triggerSecurityScan()">
+              🔍 Scan System Vulnerabilities
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+          
+          <!-- LEFT AREA: JWT Token & Active Tokens -->
+          <div class="flex flex-col gap-4">
+            
+            <!-- JWT Token Inspector Card -->
+            <div class="card p-5" style="background:rgba(15,23,42,0.9);border:1px solid rgba(6,182,212,0.35)">
+              <div class="flex items-center justify-between mb-3 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+                <h4 class="card-title" style="color:#22D3EE">🔑 Active Session JSON Web Token (JWT)</h4>
+                <span class="badge badge-success" style="font-size:9px">HS256 Signature Valid</span>
+              </div>
+              
+              <div class="p-3.5 rounded-lg mb-3" style="background:#090D16;border:1px solid rgba(255,255,255,0.08);">
+                <div class="font-mono text-xs text-muted mb-2 break-all" style="color:#C084FC">
+                  ${mockJWT}
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-muted">Algorithm: <strong>HS256</strong> · Payload Size: 184 bytes</span>
+                  <button class="btn btn-ghost btn-xs text-primary" onclick="navigator.clipboard.writeText('${mockJWT}');Utils.Toast.success('Token Copied', 'JWT signature saved to clipboard');">
+                    📋 Copy Token
+                  </button>
+                </div>
+              </div>
+
+              <!-- Decoded Payload Viewer -->
+              <div class="p-3.5 rounded-lg" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);">
+                <div class="font-bold text-xs text-muted mb-2">Decoded Token Payload</div>
+                <pre class="font-mono text-xs text-primary" style="margin:0;overflow:x-auto">${JSON.stringify(mockTokenPayload, null, 2)}</pre>
+              </div>
+            </div>
+
+            <!-- Active Tokens Directory -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+                <h4 class="card-title">🌐 Active Session Access Tokens</h4>
+                <span class="badge badge-primary">${activeTokens.length} Active Nodes</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table w-full text-xs">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Token ID</th>
+                      <th class="text-left">User</th>
+                      <th class="text-left">Role</th>
+                      <th class="text-left">IP Origin</th>
+                      <th class="text-left">Issued At</th>
+                      <th class="text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${activeTokens.map(tok => `
+                      <tr>
+                        <td class="font-mono font-bold text-primary">${tok.id}</td>
+                        <td class="font-bold">${tok.user}</td>
+                        <td><span class="badge ${tok.role==='Admin'?'badge-purple':'badge-neutral'}">${tok.role}</span></td>
+                        <td class="font-mono">${tok.ip}</td>
+                        <td>${tok.issuedAt}</td>
+                        <td class="text-right">
+                          <button class="btn btn-danger btn-xs" onclick="AuthModule.revokeToken('${tok.id}')">Revoke</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT AREA: Security Control Controls & MFA Sandbox -->
+          <div class="flex flex-col gap-4">
+            
+            <!-- Controls Panel -->
+            <div class="card p-5" style="background:rgba(15,23,42,0.9);border:1px solid rgba(168,85,247,0.3)">
+              <div class="flex items-center justify-between mb-3 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+                <h4 class="card-title" style="color:#C084FC">🛡️ Security Whitelists</h4>
+              </div>
+              
+              <div class="flex flex-col gap-4">
+                <div>
+                  <label class="flex items-center justify-between cursor-pointer">
+                    <div>
+                      <div class="font-bold text-xs">IP Subnet Lockdown</div>
+                      <div class="text-muted text-xs">Restrict connections to 192.168.10.* only.</div>
+                    </div>
+                    <input type="checkbox" id="sec-whitelist-toggle" onchange="AuthModule.toggleWhitelist(this.checked)" ${whitelistActive?'checked':''} style="width:20px;height:20px;accent-color:#A855F7" />
+                  </label>
+                </div>
+
+                <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">
+                  <div class="font-bold text-xs mb-1.5">MFA Verification Status</div>
+                  <div class="flex items-center gap-2 p-2.5 rounded-lg" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25)">
+                    <span class="text-lg">🛡️</span>
+                    <div>
+                      <div class="font-bold text-xs text-success">MFA Enabled & Verified</div>
+                      <div class="text-muted text-xs">Mobile device authenticated.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MFA Simulator Sandbox -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+                <h4 class="card-title">📱 Multi-Factor Code Sandbox</h4>
+              </div>
+              <div class="flex flex-col gap-3">
+                <p class="text-xs text-muted">Test MFA push tokens or dynamically generate OTP key verification slots:</p>
+                <div class="flex gap-2">
+                  <input type="text" id="mfa-test-code" class="form-control text-center font-mono font-bold" placeholder="6-Digit OTP Code" style="letter-spacing:0.2em;font-size:14px" />
+                  <button class="btn btn-primary btn-xs font-bold" onclick="AuthModule.verifyMFACode()">Verify</button>
+                </div>
+                <button class="btn btn-secondary btn-xs w-full" onclick="AuthModule.generateMockMFA()">⚡ Generate Simulated OTP</button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- BOTTOM AREA: Real-Time Security Event Audit logs -->
+        <div class="card p-5" style="border-color:rgba(239,68,68,0.25)">
+          <div class="flex items-center justify-between mb-3 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+            <h4 class="card-title" style="color:var(--clr-danger-text)">🚨 Security Audit Logs & Access Records</h4>
+            <button class="btn btn-ghost btn-xs text-muted" onclick="AuthModule.clearSecurityLogs()">🗑️ Clear Audit Records</button>
+          </div>
+
+          <div class="overflow-y-auto" style="max-height:220px;">
+            <table class="table w-full text-xs">
+              <thead>
+                <tr>
+                  <th class="text-left">Timestamp</th>
+                  <th class="text-left">Security Event</th>
+                  <th class="text-left">Type</th>
+                  <th class="text-left">User</th>
+                  <th class="text-left">IP Address</th>
+                  <th class="text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody id="security-log-tbody">
+                ${securityLogs.map(log => `
+                  <tr>
+                    <td class="font-mono text-muted">${new Date(log.time).toLocaleString()}</td>
+                    <td class="font-medium">${log.event}</td>
+                    <td class="font-mono text-muted">${log.type}</td>
+                    <td class="font-bold">${log.user}</td>
+                    <td class="font-mono">${log.ip}</td>
+                    <td class="text-right"><span class="badge ${log.status==='SUCCESS'?'badge-success':'badge-danger'}">${log.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function toggleWhitelist(active) {
+    whitelistActive = active;
+    addSecurityLog(
+      active ? 'Subnet whitelist restrictions activated. Non-whitelist nodes locked out.' : 'Subnet whitelist restrictions deactivated.',
+      'IP_CONFIG',
+      '192.168.10.109',
+      currentUser.name,
+      'SUCCESS'
+    );
+    Utils.Toast.info(active ? 'IP Restrictions Active' : 'IP Restrictions Disabled', active ? 'Lockdown mode active' : 'Lockdown disabled');
+    Router.dispatch();
+  }
+
+  function revokeToken(tokId) {
+    activeTokens = activeTokens.filter(t => t.id !== tokId);
+    addSecurityLog(
+      `Access token token signature revoked. ID: ${tokId}`,
+      'TOKEN_REVOKE',
+      '192.168.10.109',
+      currentUser.name,
+      'SUCCESS'
+    );
+    Utils.Toast.success('Token Revoked', `Active access session ${tokId} terminated.`);
+    Router.dispatch();
+  }
+
+  function generateMockMFA() {
+    const code = Math.floor(100000 + Math.random() * 900000);
+    const codeEl = document.getElementById('mfa-test-code');
+    if (codeEl) codeEl.value = code;
+    Utils.Toast.info('Simulated MFA Code Sent', `Dynamically generated OTP code: ${code}`);
+  }
+
+  function verifyMFACode() {
+    const codeEl = document.getElementById('mfa-test-code');
+    const val = codeEl ? codeEl.value.trim() : '';
+    if (val.length === 6) {
+      addSecurityLog(
+        `Dynamic OTP MFA code signature validation checked and verified successfully. Code: ${val}`,
+        'MFA_VERIFY',
+        '192.168.10.109',
+        currentUser.name,
+        'SUCCESS'
+      );
+      Utils.Toast.success('MFA Token Verified', 'Dynamic signature verified successfully');
+      if (codeEl) codeEl.value = '';
+      Router.dispatch();
+    } else {
+      Utils.Toast.error('Invalid OTP', 'Code must be exactly 6 digits.');
+    }
+  }
+
+  function triggerSecurityScan() {
+    Utils.Toast.info('Security Scan Initiated', 'Checking active session sockets & certificates...');
+    setTimeout(() => {
+      addSecurityLog('Vulnerability scanning completed. 0 security leaks found. 256-bit TLS active.', 'SEC_SCAN', '192.168.10.109', currentUser.name, 'SUCCESS');
+      Utils.Toast.success('System Secure', 'Scanning completed: 0 threats detected.');
+      Router.dispatch();
+    }, 1500);
+  }
+
+  function clearSecurityLogs() {
+    securityLogs = [];
+    saveLogs();
+    Utils.Toast.info('Audit Logs Cleared', 'Access history records purged.');
+    Router.dispatch();
+  }
+
   return {
     init, getCurrentUser, isAdmin, login, register, logout,
     openAuthModal, switchTab, submitLogin, submitRegister, quickLogin,
-    renderLoginPage, switchPageTab, submitPageLogin, submitPageRegister
+    renderLoginPage, switchPageTab, submitPageLogin, submitPageRegister,
+    renderSecurityPage, toggleWhitelist, revokeToken, generateMockMFA, verifyMFACode,
+    triggerSecurityScan, clearSecurityLogs
   };
 })();

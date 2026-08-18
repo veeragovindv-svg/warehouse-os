@@ -41,11 +41,11 @@ const InventoryModule = (() => {
           <p class="section-sub">${products.length} products across ${zones.length} zones</p>
         </div>
         <div class="section-actions flex items-center gap-2">
-          <button id="inv-export-btn" class="btn btn-secondary btn-sm">
+          <button id="inv-export-btn" class="btn btn-secondary btn-sm" aria-label="Export inventory to CSV">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             Export CSV
           </button>
-          <button id="inv-add-btn" class="btn btn-primary btn-sm">
+          <button id="inv-add-btn" class="btn btn-primary btn-sm" aria-label="Add new product">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             Add Product
           </button>
@@ -59,17 +59,17 @@ const InventoryModule = (() => {
       <div class="filter-bar">
         <div class="filter-search">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          <input type="search" id="inv-search" placeholder="Search name, SKU, bin…" value="${currentFilters.search}" />
+          <input type="search" id="inv-search" placeholder="Search name, SKU, bin…" value="${currentFilters.search}" aria-label="Search inventory" />
         </div>
-        <select id="inv-zone-filter" class="filter-select">
+        <select id="inv-zone-filter" class="filter-select" aria-label="Filter by zone">
           <option value="all">All Zones</option>
           ${zones.map(z => `<option value="${z}" ${currentFilters.zone===z?'selected':''}>Zone ${z} — ${SeedData.zoneInfo[z]?.name||z}</option>`).join('')}
         </select>
-        <select id="inv-cat-filter" class="filter-select">
+        <select id="inv-cat-filter" class="filter-select" aria-label="Filter by category">
           <option value="all">All Categories</option>
           ${categories.map(c => `<option value="${c}" ${currentFilters.category===c?'selected':''}>${c}</option>`).join('')}
         </select>
-        <select id="inv-status-filter" class="filter-select">
+        <select id="inv-status-filter" class="filter-select" aria-label="Filter by status">
           <option value="all">All Stock</option>
           <option value="healthy" ${currentFilters.status==='healthy'?'selected':''}>✅ Healthy</option>
           <option value="low" ${currentFilters.status==='low'?'selected':''}>⚠️ Low Stock</option>
@@ -79,20 +79,20 @@ const InventoryModule = (() => {
         <div class="ml-auto flex items-center gap-2">
           <!-- Row Density Controls -->
           <div class="btn-group" title="Table Row Density">
-            <button class="btn btn-secondary btn-sm ${rowDensity==='compact'?'active':''}" id="density-compact-btn" title="Compact density (tight rows)">
+            <button class="btn btn-secondary btn-sm ${rowDensity==='compact'?'active':''}" id="density-compact-btn" title="Compact density (tight rows)" aria-label="Compact row density">
               ⊟ Compact
             </button>
-            <button class="btn btn-secondary btn-sm ${rowDensity==='comfortable'?'active':''}" id="density-comfortable-btn" title="Comfortable density (relaxed rows)">
+            <button class="btn btn-secondary btn-sm ${rowDensity==='comfortable'?'active':''}" id="density-comfortable-btn" title="Comfortable density (relaxed rows)" aria-label="Comfortable row density">
               ⊞ Comfortable
             </button>
           </div>
 
           <!-- Table / Grid Switcher -->
           <div class="btn-group">
-            <button class="btn btn-secondary btn-sm ${currentView==='table'?'active':''}" id="view-table-btn" title="Table view">
+            <button class="btn btn-secondary btn-sm ${currentView==='table'?'active':''}" id="view-table-btn" title="Table view" aria-label="Table view">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </button>
-            <button class="btn btn-secondary btn-sm ${currentView==='grid'?'active':''}" id="view-grid-btn" title="Grid view">
+            <button class="btn btn-secondary btn-sm ${currentView==='grid'?'active':''}" id="view-grid-btn" title="Grid view" aria-label="Grid view">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
             </button>
           </div>
@@ -107,16 +107,16 @@ const InventoryModule = (() => {
         <span class="badge badge-primary font-mono font-bold" id="batch-count-badge" style="font-size:11px">
           ${selectedProductIds.size} Selected
         </span>
-        <button class="btn btn-primary btn-xs font-bold" onclick="InventoryModule.batchReorder()">
+        <button class="btn btn-primary btn-xs font-bold" onclick="InventoryModule.batchReorder()" aria-label="Bulk reorder selected items">
           ⚡ Bulk Reorder (+25)
         </button>
-        <button class="btn btn-secondary btn-xs" onclick="InventoryModule.batchExport()">
+        <button class="btn btn-secondary btn-xs" onclick="InventoryModule.batchExport()" aria-label="Export selected items to CSV">
           🏷️ Export Selected
         </button>
-        <button class="btn btn-secondary btn-xs" onclick="InventoryModule.batchMarkInspected()">
+        <button class="btn btn-secondary btn-xs" onclick="InventoryModule.batchMarkInspected()" aria-label="Mark selected items as inspected">
           📦 Mark Inspected
         </button>
-        <button class="btn btn-ghost btn-xs text-muted" onclick="InventoryModule.clearSelection()">
+        <button class="btn btn-ghost btn-xs text-muted" onclick="InventoryModule.clearSelection()" aria-label="Clear selection">
           ✕ Clear
         </button>
       </div>
@@ -166,7 +166,7 @@ const InventoryModule = (() => {
       <table class="data-table ${rowDensity==='compact'?'table-compact':'table-comfortable'}" id="inv-table">
         <thead><tr>
           <th style="width:36px;text-align:center">
-            <input type="checkbox" id="inv-select-all" ${isAllSelected?'checked':''} title="Select all on this page" />
+            <input type="checkbox" id="inv-select-all" ${isAllSelected?'checked':''} title="Select all on this page" aria-label="Select all products on this page" />
           </th>
           ${thSort('sku','SKU')} ${thSort('name','Product Name')}
           <th>Category</th><th>Zone / Bin</th>
@@ -187,7 +187,7 @@ const InventoryModule = (() => {
         <span>Showing <strong>${totalItems ? startIndex + 1 : 0}–${Math.min(startIndex + pageProducts.length, totalItems)}</strong> of <strong>${totalItems}</strong> items</span>
         <div class="flex items-center gap-1.5 ml-3">
           <span>Rows per page:</span>
-          <select id="inv-page-size" class="filter-select" style="padding:2px 8px;font-size:11px;height:26px">
+          <select id="inv-page-size" class="filter-select" style="padding:2px 8px;font-size:11px;height:26px" aria-label="Rows per page">
             <option value="10" ${pageSize===10?'selected':''}>10</option>
             <option value="25" ${pageSize===25?'selected':''}>25</option>
             <option value="50" ${pageSize===50?'selected':''}>50</option>
@@ -197,11 +197,11 @@ const InventoryModule = (() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <button class="btn btn-secondary btn-xs" id="inv-prev-page" ${currentPage<=1?'disabled':''}>
+        <button class="btn btn-secondary btn-xs" id="inv-prev-page" ${currentPage<=1?'disabled':''} aria-label="Previous page">
           ◀ Prev
         </button>
         <span>Page <strong>${currentPage}</strong> of <strong>${totalPages}</strong></span>
-        <button class="btn btn-secondary btn-xs" id="inv-next-page" ${currentPage>=totalPages?'disabled':''}>
+        <button class="btn btn-secondary btn-xs" id="inv-next-page" ${currentPage>=totalPages?'disabled':''} aria-label="Next page">
           Next ▶
         </button>
       </div>
@@ -311,7 +311,7 @@ const InventoryModule = (() => {
     return `
     <tr class="${isChecked?'row-selected':''}">
       <td style="text-align:center">
-        <input type="checkbox" class="inv-row-checkbox" value="${p.id}" ${isChecked?'checked':''} />
+        <input type="checkbox" class="inv-row-checkbox" value="${p.id}" ${isChecked?'checked':''} aria-label="Select product ${Utils.escapeHtml ? Utils.escapeHtml(p.name) : p.name}" />
       </td>
       <td class="col-sku">${p.sku}</td>
       <td><div class="flex items-center gap-2"><span class="font-semibold text-sm" style="color:var(--clr-text)">${p.name}</span></div></td>
@@ -335,8 +335,8 @@ const InventoryModule = (() => {
       <td class="col-num">${Utils.currency(p.unitPrice)}</td>
       <td class="text-xs text-muted truncate" style="max-width:120px">${p.supplier}</td>
       <td class="col-actions">
-        <button class="btn btn-ghost btn-sm icon-btn" onclick="InventoryModule.openEditModal('${p.id}')" title="Edit">✏️</button>
-        <button class="btn btn-ghost btn-sm icon-btn" onclick="InventoryModule.openAdjustModal('${p.id}')" title="Adjust Stock">📊</button>
+        <button class="btn btn-ghost btn-sm icon-btn" onclick="InventoryModule.openEditModal('${p.id}')" title="Edit" aria-label="Edit ${Utils.escapeHtml ? Utils.escapeHtml(p.name) : p.name}">✏️</button>
+        <button class="btn btn-ghost btn-sm icon-btn" onclick="InventoryModule.openAdjustModal('${p.id}')" title="Adjust Stock" aria-label="Adjust stock for ${Utils.escapeHtml ? Utils.escapeHtml(p.name) : p.name}">📊</button>
       </td>
     </tr>`;
   }

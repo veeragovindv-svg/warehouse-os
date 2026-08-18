@@ -38,7 +38,8 @@
     {
       section: 'Admin & Staff',
       items: [
-        { path:'/staff', label:'Staff & Add New Staff', icon:'👥', handler: c => StaffModule.render(c), badge: () => Store.get.staff().length || null },
+        { path:'/staff',    label:'Staff & Add New Staff', icon:'👥', handler: c => StaffModule.render(c), badge: () => Store.get.staff().length || null },
+        { path:'/security', label:'Security & Audit Logs', icon:'🛡️', handler: c => AuthModule.renderSecurityPage(c) },
       ]
     }
   ];
@@ -72,7 +73,7 @@
     const nav = document.getElementById('sidebar-nav');
     if (!nav) return;
     nav.innerHTML = NAV_ITEMS.map(section => `
-      <div class="sidebar-section-label">${section.section}</div>
+      <div class="sidebar-section-label" role="group" aria-label="${section.section}">${section.section}</div>
       ${section.items.map(item => {
         const badge = item.badge ? item.badge() : null;
         return `
@@ -88,7 +89,10 @@
 
   function updateActiveNav(path) {
     Utils.qsa('.nav-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.path === path);
+      const isActive = item.dataset.path === path;
+      item.classList.toggle('active', isActive);
+      if (isActive) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
     });
     // Refresh badge counts
     NAV_ITEMS.forEach(section => {
@@ -493,7 +497,7 @@
     if (searchInput) {
       searchInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
-          const q = e.target.value.trim();
+          const q = Utils.sanitizeInput(e.target.value);
           if (!q) return;
           Router.go('/inventory');
           setTimeout(() => {

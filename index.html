@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="WarehouseOS — Unique & Dynamic Glassmorphism Operations Platform with Dark & Light Modes." />
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>WarehouseOS — Spatial Glassmorphism Platform</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -160,6 +166,7 @@
   </style>
 </head>
 <body>
+  <a href="#page-content" class="skip-link">Skip to main content</a>
 
   <!-- ═══════════════════════════════════════════════════════ -->
   <!-- DYNAMIC AMBIENT DRIFTING ORBS                           -->
@@ -201,7 +208,7 @@
             <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.6"/>
             <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
-          <input type="search" id="global-search" placeholder="Search orders, SKUs, bins…" autocomplete="off" />
+          <input type="search" id="global-search" placeholder="Search orders, SKUs, bins…" autocomplete="off" aria-label="Search directory for orders, SKUs, or bins" />
         </div>
       </div>
 
@@ -211,8 +218,8 @@
       </nav>
 
       <!-- Footer User Profile with Admin Access & ➕ Add Staff Button -->
-      <div class="sidebar-footer">
-        <div class="sidebar-user" onclick="WarehouseApp.openAdminModal()" style="cursor:pointer" title="Click to open Admin Controls & Security Settings">
+      <div class="sidebar-footer" role="contentinfo">
+        <div class="sidebar-user" onclick="WarehouseApp.openAdminModal()" style="cursor:pointer" title="Click to open Admin Controls & Security Settings" aria-label="User profile and admin controls">
           <div class="user-avatar-sm" style="background:linear-gradient(135deg, rgba(168,85,247,0.3), rgba(6,182,212,0.3));color:#C084FC;border-color:rgba(168,85,247,0.5)">VG</div>
           <div class="user-info">
             <div class="flex items-center gap-1">
@@ -229,16 +236,17 @@
           <button class="btn btn-secondary btn-xs w-full font-bold flex items-center justify-center gap-1.5" 
                   onclick="StaffModule.openAddStaffModal()" 
                   title="Onboard and add a new operator / picker to floor roster"
+                  aria-label="Add new staff member to roster"
                   style="border-color:rgba(6,182,212,0.35);color:#38BDF8;background:rgba(6,182,212,0.08)">
             <span>➕</span>
             <span>Add New Staff</span>
           </button>
           
           <div class="flex items-center justify-between text-xs text-muted pt-1 px-1" style="font-size:10px">
-            <button class="btn-link text-muted hover:text-primary" onclick="AuthModule.openAuthModal('login')" title="Switch to another account or login as Admin">
+            <button class="btn-link text-muted hover:text-primary" onclick="AuthModule.openAuthModal('login')" title="Switch to another account or login as Admin" aria-label="Switch user account">
               🔄 Switch User
             </button>
-            <button class="btn-link text-muted hover:text-danger" onclick="AuthModule.logout()" title="Sign out of current session">
+            <button class="btn-link text-muted hover:text-danger" onclick="AuthModule.logout()" title="Sign out of current session" aria-label="Sign out of session">
               🚪 Logout
             </button>
           </div>
@@ -250,7 +258,7 @@
     <main id="main" class="main-area">
 
       <!-- TOP GLASS BAR -->
-      <header id="top-bar" class="top-bar">
+      <header id="top-bar" class="top-bar" role="banner">
         <!-- Breadcrumb -->
         <div class="top-bar-breadcrumb">
           <button id="mobile-menu-btn" class="btn btn-ghost icon-btn mobile-only" aria-label="Toggle menu">
@@ -264,7 +272,7 @@
         </div>
 
         <!-- Live Metric Stream Capsule -->
-        <div id="top-bar-stats"></div>
+        <div id="top-bar-stats" role="region" aria-live="polite" aria-label="Live operations metrics"></div>
 
         <!-- Actions -->
         <div class="top-bar-actions">
@@ -293,7 +301,7 @@
                 stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               <path d="M7 13.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span id="alert-badge" class="alert-badge hidden">0</span>
+            <span id="alert-badge" class="alert-badge hidden" role="status" aria-live="polite">0</span>
           </button>
 
           <button class="btn btn-ghost icon-btn" aria-label="Refresh data" title="Sync Telemetry" id="refresh-btn">
@@ -306,6 +314,7 @@
           <button class="btn btn-secondary btn-xs font-bold flex items-center gap-1" 
                   onclick="Router.go('/video-guide')" 
                   title="Watch Step-by-Step Video Walkthrough"
+                  aria-label="Watch interactive step-by-step tour guide"
                   style="border-color:rgba(6,182,212,0.45);color:#38BDF8;background:rgba(6,182,212,0.12);padding:4px 10px;font-size:11px">
             <span>🎬</span>
             <span>How to Run Video</span>
@@ -314,6 +323,7 @@
           <button class="btn btn-secondary btn-xs font-bold flex items-center gap-1" 
                   onclick="Router.go('/login')" 
                   title="Open Dedicated Login & Registration Gateway"
+                  aria-label="Sign in or register an account"
                   style="border-color:rgba(168,85,247,0.4);color:#C084FC;background:rgba(168,85,247,0.1);padding:4px 10px;font-size:11px">
             <span>🔐</span>
             <span>Login / Register</span>

@@ -32,10 +32,10 @@ const StaffModule = (() => {
           <p class="section-sub">${staff.length} registered personnel · ${activeStaff} active on floor · ${onBreak} on break</p>
         </div>
         <div class="section-actions flex items-center gap-2">
-          <button class="btn btn-secondary btn-sm" onclick="StaffModule.openQuickAddPresets()">
+          <button class="btn btn-secondary btn-sm" onclick="StaffModule.openQuickAddPresets()" aria-label="Open quick add presets">
             ⚡ 1-Click Quick Onboard
           </button>
-          <button class="btn btn-primary btn-sm font-bold" onclick="StaffModule.openAddStaffModal()">
+          <button class="btn btn-primary btn-sm font-bold" onclick="StaffModule.openAddStaffModal()" aria-label="Add new staff member">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             ➕ Add New Staff
           </button>
@@ -93,13 +93,13 @@ const StaffModule = (() => {
       <div class="filter-bar">
         <div class="filter-search">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          <input type="search" id="staff-search" placeholder="Search staff name, ID or role…" value="${currentFilters.search}" />
+          <input type="search" id="staff-search" placeholder="Search staff name, ID or role…" value="${currentFilters.search}" aria-label="Search staff" />
         </div>
-        <select id="staff-zone-filter" class="filter-select">
+        <select id="staff-zone-filter" class="filter-select" aria-label="Filter staff by zone">
           <option value="all">All Zones</option>
           ${['A','B','C','D','E','F'].map(z => `<option value="${z}" ${currentFilters.zone===z?'selected':''}>Zone ${z} (${SeedData.zoneInfo[z]?.name||z})</option>`).join('')}
         </select>
-        <select id="staff-role-filter" class="filter-select">
+        <select id="staff-role-filter" class="filter-select" aria-label="Filter staff by role">
           <option value="all">All Roles</option>
           <option value="Picker">Picker</option>
           <option value="Senior Picker">Senior Picker</option>
@@ -107,7 +107,7 @@ const StaffModule = (() => {
           <option value="Supervisor">Supervisor</option>
           <option value="AGV Controller">AGV Controller</option>
         </select>
-        <select id="staff-status-filter" class="filter-select">
+        <select id="staff-status-filter" class="filter-select" aria-label="Filter staff by status">
           <option value="all">All Statuses</option>
           <option value="active">🟢 Active</option>
           <option value="break">☕ On Break</option>
@@ -208,15 +208,15 @@ const StaffModule = (() => {
         <!-- Action row -->
         <div class="flex items-center justify-between gap-2 pt-2" style="border-top:1px solid var(--clr-border)">
           <div class="flex items-center gap-1">
-            <button class="btn btn-ghost btn-xs font-semibold" onclick="StaffModule.toggleStaffStatus('${s.id}')" title="Cycle Status (Active / Break / Off)">
+            <button class="btn btn-ghost btn-xs font-semibold" onclick="StaffModule.toggleStaffStatus('${s.id}')" title="Cycle Status (Active / Break / Off)" aria-label="Toggle status for ${s.name}">
               ${statusLabels[s.status] || 'Active'}
             </button>
           </div>
           <div class="flex items-center gap-1">
-            <button class="btn btn-secondary btn-xs icon-btn" onclick="StaffModule.openEditStaffModal('${s.id}')" title="Edit Staff & Zone">
+            <button class="btn btn-secondary btn-xs icon-btn" onclick="StaffModule.openEditStaffModal('${s.id}')" title="Edit Staff & Zone" aria-label="Edit staff ${s.name}">
               ✏️
             </button>
-            <button class="btn btn-ghost btn-xs icon-btn text-danger" onclick="StaffModule.deleteStaff('${s.id}')" title="Decommission / Remove Staff">
+            <button class="btn btn-ghost btn-xs icon-btn text-danger" onclick="StaffModule.deleteStaff('${s.id}')" title="Decommission / Remove Staff" aria-label="Remove staff ${s.name}">
               🗑️
             </button>
           </div>

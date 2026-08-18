@@ -1,0 +1,12 @@
+{
+  "name": "warehouse-os",
+  "version": "1.0.0",
+  "description": "WarehouseOS - Smart Warehouse Operations Platform",
+  "main": "js/app.js",
+  "scripts": {
+    "test": "node run_tests.js && node __tests__/utils.test.js && node __tests__/store.test.js && node __tests__/router.test.js && node __tests__/security.test.js && node __tests__/accessibility.test.js"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0"
+  }
+}

@@ -190,7 +190,7 @@ const Store = (() => {
     emit('products:changed', state.products);
     return state.products[idx];
   }
-
+  /** @param {string} productId - Product ID @param {number} delta - Quantity change (negative for deductions) @param {string} note - Reason description @param {string} by - Operator name */
   function adjustStock(productId, delta, note = 'Adjustment', by = 'System') {
     const product = get.productById(productId);
     if (!product) return;
@@ -212,6 +212,7 @@ const Store = (() => {
   }
 
   // ─── ORDER ACTIONS ─────────────────────────────────────────
+  /** @param {Object} data - Order data including customer, priority, items array @returns {Object} Created order record with pending status */
   function addOrder(data) {
     const num = state.orders.length + 1;
     const id = 'ORD-' + String(num).padStart(3,'0');
@@ -426,6 +427,7 @@ const Store = (() => {
   }
 
   // ─── ALERT ACTIONS ─────────────────────────────────────────
+  /** @param {Object} data - Alert data including type, severity, title, message @returns {Object} Created alert with active status */
   function addAlert(data) {
     // Deduplicate: don't add same type+productId if already open
     const existing = state.alerts.find(a =>
@@ -551,6 +553,7 @@ const Store = (() => {
   }
 
   // ─── STAFF ACTIONS ─────────────────────────────────────────
+  /** @param {Object} data - Staff member data including name, role, zone, status @returns {Object} Created staff member record */
   function addStaff(data) {
     const id = 'ST-' + String(state.staff.length + 1).padStart(3, '0');
     const initials = data.name.trim().split(/\s+/).map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'ST';

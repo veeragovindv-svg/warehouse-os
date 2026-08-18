@@ -28,8 +28,8 @@ const AlertsModule = (() => {
           <p class="section-sub">${open.length} open alerts · ${critical.length} critical</p>
         </div>
         <div class="section-actions">
-          <button class="btn btn-secondary btn-sm" onclick="AlertsModule.acknowledgeAll()">✓ Acknowledge All</button>
-          <button class="btn btn-primary btn-sm" onclick="AlertsModule.openReportIncident()">⚠️ Report Incident</button>
+          <button class="btn btn-secondary btn-sm" onclick="AlertsModule.acknowledgeAll()" aria-label="Acknowledge all alerts">✓ Acknowledge All</button>
+          <button class="btn btn-primary btn-sm" onclick="AlertsModule.openReportIncident()" aria-label="Report new incident">⚠️ Report Incident</button>
         </div>
       </div>
 
@@ -59,13 +59,13 @@ const AlertsModule = (() => {
 
       <!-- Tabs -->
       <div class="line-tabs mb-0">
-        <button class="line-tab-btn ${currentTab==='alerts'?'active':''}" data-tab="alerts">
+        <button class="line-tab-btn ${currentTab==='alerts'?'active':''}" data-tab="alerts" aria-label="Alerts tab">
           🔔 Alerts (${alerts.length})
         </button>
-        <button class="line-tab-btn ${currentTab==='incidents'?'active':''}" data-tab="incidents">
+        <button class="line-tab-btn ${currentTab==='incidents'?'active':''}" data-tab="incidents" aria-label="Incidents tab">
           ⚠️ Incidents (${incidents.length})
         </button>
-        <button class="line-tab-btn ${currentTab==='reorder'?'active':''}" data-tab="reorder">
+        <button class="line-tab-btn ${currentTab==='reorder'?'active':''}" data-tab="reorder" aria-label="Reorder Recommendations tab">
           🛒 Reorder Recommendations
         </button>
       </div>
@@ -73,7 +73,7 @@ const AlertsModule = (() => {
       <!-- Filter (alerts only) -->
       <div id="alert-filter-bar" class="filter-bar mb-4 mt-4">
         ${['all','critical','warning','open','resolved'].map(f => `
-          <button class="btn btn-secondary btn-sm ${alertFilter===f?'active':''}" data-filter="${f}" onclick="AlertsModule.setFilter('${f}')">
+          <button class="btn btn-secondary btn-sm ${alertFilter===f?'active':''}" data-filter="${f}" onclick="AlertsModule.setFilter('${f}')" aria-label="Filter alerts by ${f}">
             ${f.charAt(0).toUpperCase()+f.slice(1)}
           </button>`).join('')}
       </div>
@@ -131,8 +131,8 @@ const AlertsModule = (() => {
           <span class="badge ${a.status==='resolved'?'badge-success':a.status==='acknowledged'?'badge-primary':'badge-neutral'}">
             ${a.status.toUpperCase()}
           </span>
-          ${a.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="AlertsModule.acknowledgeOne('${a.id}')">Ack</button>` : ''}
-          ${a.status !== 'resolved' ? `<button class="btn btn-secondary btn-sm" onclick="AlertsModule.resolveOne('${a.id}')">Resolve</button>` : ''}
+          ${a.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="AlertsModule.acknowledgeOne('${a.id}')" aria-label="Acknowledge alert ${a.id}">Ack</button>` : ''}
+          ${a.status !== 'resolved' ? `<button class="btn btn-secondary btn-sm" onclick="AlertsModule.resolveOne('${a.id}')" aria-label="Resolve alert ${a.id}">Resolve</button>` : ''}
         </div>
       </div>`).join('')}
     </div>`;
@@ -160,8 +160,8 @@ const AlertsModule = (() => {
               <div class="text-xs text-muted">${inc.sku} · Zone ${inc.zone} · Bin ${inc.bin} · ${inc.quantity} unit${inc.quantity!==1?'s':''}</div>
             </div>
             <div class="flex gap-2">
-              ${inc.status === 'open' ? `<button class="btn btn-secondary btn-sm" onclick="AlertsModule.updateIncidentStatus('${inc.id}','reviewing')">Start Review</button>` : ''}
-              ${inc.status === 'reviewing' ? `<button class="btn btn-success btn-sm" onclick="AlertsModule.updateIncidentStatus('${inc.id}','resolved')">Mark Resolved</button>` : ''}
+              ${inc.status === 'open' ? `<button class="btn btn-secondary btn-sm" onclick="AlertsModule.updateIncidentStatus('${inc.id}','reviewing')" aria-label="Start review for incident ${inc.id}">Start Review</button>` : ''}
+              ${inc.status === 'reviewing' ? `<button class="btn btn-success btn-sm" onclick="AlertsModule.updateIncidentStatus('${inc.id}','resolved')" aria-label="Mark incident ${inc.id} as resolved">Mark Resolved</button>` : ''}
             </div>
           </div>
           <p class="text-sm text-secondary mb-3">${inc.description}</p>
