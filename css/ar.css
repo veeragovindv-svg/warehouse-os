@@ -1,0 +1,525 @@
+/* ============================================================
+   WarehouseOS — ar.css
+   AR Spatial Headset View — HUD, beacons, glassmorphism
+   ============================================================ */
+
+/* === AR CONTAINER === */
+.ar-container {
+  position: fixed;
+  inset: 0;
+  background: hsl(220, 30%, 3%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+
+/* Scanline overlay */
+.ar-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 200, 255, 0.015) 2px,
+    rgba(0, 200, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Vignette */
+.ar-container::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === AR HUD HEADER === */
+.ar-hud-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: 1px solid rgba(0, 220, 255, 0.15);
+  background: rgba(0, 10, 30, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.ar-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.ar-logo-icon {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid hsl(195, 100%, 60%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: hsl(195, 100%, 60%);
+  box-shadow: 0 0 12px hsl(195, 100%, 60%, 0.3), inset 0 0 8px hsl(195, 100%, 60%, 0.05);
+  animation: ar-pulse-border 3s ease-in-out infinite;
+}
+
+@keyframes ar-pulse-border {
+  0%, 100% { box-shadow: 0 0 12px hsl(195,100%,60%,0.3), inset 0 0 8px hsl(195,100%,60%,0.05); }
+  50%       { box-shadow: 0 0 20px hsl(195,100%,60%,0.5), inset 0 0 12px hsl(195,100%,60%,0.1); }
+}
+
+.ar-system-name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: hsl(195, 100%, 70%);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ar-system-sub {
+  font-size: var(--text-xs);
+  color: hsl(195, 60%, 50%);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.ar-hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ar-timestamp {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: hsl(195, 100%, 80%);
+  letter-spacing: 0.1em;
+}
+
+.ar-date {
+  font-size: var(--text-xs);
+  color: hsl(195, 50%, 50%);
+  letter-spacing: 0.05em;
+}
+
+.ar-hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-1);
+}
+
+.ar-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
+  color: hsl(195, 60%, 55%);
+}
+
+.ar-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(142, 100%, 55%);
+  box-shadow: 0 0 8px hsl(142, 100%, 55%);
+  animation: ar-blink 2s ease-in-out infinite;
+}
+
+@keyframes ar-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* === AR MAIN LAYOUT === */
+.ar-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 5;
+}
+
+/* === AR PANELS (glassmorphism) === */
+.ar-panel {
+  background: rgba(0, 15, 40, 0.5);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(0, 220, 255, 0.1);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,220,255,0.2) transparent;
+}
+
+.ar-panel.right { border-right: none; border-left: 1px solid rgba(0, 220, 255, 0.1); }
+
+.ar-panel-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(195, 80%, 60%);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid rgba(0, 220, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.ar-panel-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: hsl(195, 100%, 60%);
+  border-radius: 50%;
+  box-shadow: 0 0 6px hsl(195, 100%, 60%);
+}
+
+/* === AR MAP CENTER === */
+.ar-map-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, hsl(210,30%,6%) 0%, hsl(220,30%,3%) 100%);
+}
+
+.ar-map-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-8);
+}
+
+#ar-map-canvas {
+  border-radius: var(--radius-md);
+  cursor: crosshair;
+  image-rendering: pixelated;
+}
+
+/* AR compass */
+.ar-compass {
+  position: absolute;
+  top: var(--sp-4);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--sp-4);
+  font-size: var(--text-xs);
+  color: hsl(195, 60%, 50%);
+  letter-spacing: 0.08em;
+}
+
+.ar-compass-arrow {
+  color: hsl(195, 100%, 70%);
+  font-weight: 700;
+}
+
+/* AR zoom controls */
+.ar-zoom-controls {
+  position: absolute;
+  bottom: var(--sp-4);
+  right: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.ar-zoom-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(0, 220, 255, 0.2);
+  background: rgba(0, 20, 50, 0.7);
+  color: hsl(195, 80%, 65%);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ar-zoom-btn:hover {
+  background: rgba(0, 220, 255, 0.1);
+  border-color: rgba(0, 220, 255, 0.4);
+}
+
+/* === AR DATA WIDGETS === */
+.ar-stat-widget {
+  background: rgba(0, 30, 70, 0.4);
+  border: 1px solid rgba(0, 220, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3);
+}
+
+.ar-stat-label {
+  font-size: 10px;
+  color: hsl(195, 50%, 45%);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--sp-1);
+}
+
+.ar-stat-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: hsl(195, 100%, 75%);
+  letter-spacing: 0.04em;
+}
+
+.ar-stat-sub {
+  font-size: var(--text-xs);
+  color: hsl(195, 50%, 45%);
+  margin-top: 2px;
+}
+
+/* === AR BIN DETAIL PANEL === */
+.ar-bin-detail {
+  background: rgba(0, 220, 255, 0.05);
+  border: 1px solid rgba(0, 220, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+  animation: ar-panel-in 0.2s ease;
+}
+
+@keyframes ar-panel-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ar-bin-id {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: hsl(195, 100%, 75%);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--sp-2);
+}
+
+.ar-bin-product {
+  font-size: var(--text-sm);
+  color: hsl(195, 70%, 65%);
+  margin-bottom: var(--sp-3);
+}
+
+.ar-stock-bar {
+  height: 4px;
+  background: rgba(0,220,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--sp-2);
+}
+
+.ar-stock-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* === AR PICK LIST === */
+.ar-pick-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid rgba(0, 220, 255, 0.08);
+  font-size: var(--text-xs);
+  color: hsl(195, 60%, 60%);
+}
+
+.ar-pick-item.done { opacity: 0.4; text-decoration: line-through; }
+
+.ar-pick-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,220,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: hsl(195, 100%, 70%);
+  flex-shrink: 0;
+}
+
+.ar-pick-num.done {
+  background: hsl(142,100%,40%,0.2);
+  border-color: hsl(142,100%,45%);
+  color: hsl(142,100%,65%);
+}
+
+/* === AR ZONE LEGEND === */
+.ar-zone-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.ar-zone-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
+  color: hsl(195, 60%, 55%);
+  cursor: pointer;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.ar-zone-item:hover { background: rgba(0,220,255,0.08); color: hsl(195,80%,70%); }
+.ar-zone-item.active { background: rgba(0,220,255,0.12); color: hsl(195,100%,75%); }
+
+.ar-zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ar-zone-count {
+  margin-left: auto;
+  color: hsl(195,40%,45%);
+}
+
+/* === AR ALERT LIST === */
+.ar-alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid rgba(0,220,255,0.08);
+  font-size: var(--text-xs);
+}
+
+.ar-alert-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.ar-alert-dot.critical { background: hsl(0,90%,65%); box-shadow: 0 0 6px hsl(0,90%,65%); }
+.ar-alert-dot.warning  { background: hsl(38,90%,60%); }
+.ar-alert-dot.info     { background: hsl(195,100%,55%); }
+
+.ar-alert-text { color: hsl(195, 65%, 58%); line-height: 1.4; }
+
+/* === AR FOOTER === */
+.ar-hud-footer {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-6);
+  border-top: 1px solid rgba(0, 220, 255, 0.1);
+  background: rgba(0, 10, 30, 0.6);
+  backdrop-filter: blur(8px);
+  font-size: var(--text-xs);
+  color: hsl(195, 50%, 40%);
+}
+
+.ar-footer-controls {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.ar-footer-key {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.ar-key-tag {
+  background: rgba(0,220,255,0.08);
+  border: 1px solid rgba(0,220,255,0.2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  color: hsl(195,80%,60%);
+  font-weight: 700;
+}
+
+/* === AR EXIT BUTTON === */
+.ar-exit-btn {
+  position: fixed;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: 1000;
+  background: rgba(0,10,30,0.8);
+  border: 1px solid rgba(0,220,255,0.25);
+  color: hsl(195,80%,65%);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ar-exit-btn:hover {
+  background: rgba(0,220,255,0.1);
+  border-color: rgba(0,220,255,0.5);
+}
+
+/* === AR SCAN ANIMATION === */
+@keyframes ar-scan-line {
+  0% { top: 0; opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { top: 100%; opacity: 0.5; }
+}
+
+.ar-scan-line {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(195,100%,60%,0.4), transparent);
+  animation: ar-scan-line 6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Beacon animations */
+@keyframes beacon-pulse {
+  0%   { transform: scale(1); opacity: 0.9; }
+  70%  { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes beacon-ring {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* AR Mode enabled body */
+body.ar-mode { overflow: hidden; }

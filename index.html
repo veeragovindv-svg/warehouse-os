@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="WarehouseOS — Unique & Dynamic Glassmorphism Operations Platform with Dark & Light Modes." />
+  <title>WarehouseOS — Spatial Glassmorphism Platform</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/modules.css" />
+  <link rel="stylesheet" href="css/map.css" />
+  <link rel="stylesheet" href="css/copilot.css" />
+  <link rel="stylesheet" href="css/ar.css" />
+  <link rel="stylesheet" href="css/cdc.css" />
+  <link rel="stylesheet" href="css/dynamic.css" />
+  <link rel="stylesheet" href="css/typography.css" />
+
+  <style>
+    /* ── Critical Glassmorphism Layout ───────────────────── */
+    .top-bar {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: var(--sp-4);
+    }
+    .top-bar-breadcrumb { min-width: 0; }
+    .top-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .main-area {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: var(--sp-6);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
+    }
+    #page-content {
+      max-width: 1560px;
+      margin: 0 auto;
+      animation: glass-page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes glass-page-enter {
+      from { opacity: 0; transform: translateY(8px) scale(0.995); filter: blur(2px); }
+      to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    .alert-bell { position: relative; }
+    .alert-badge {
+      position: absolute;
+      top: -2px; right: -2px;
+      min-width: 17px; height: 17px;
+      background: var(--clr-danger);
+      color: #FFFFFF;
+      font-size: 9px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      border-radius: 9999px;
+      border: 1.5px solid var(--clr-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      animation: badge-pulse-glass 2s infinite;
+    }
+    @keyframes badge-pulse-glass {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+      50%      { transform: scale(1.1); box-shadow: 0 0 16px rgba(239, 68, 68, 0.85); }
+    }
+
+    .page-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 50vh;
+      gap: var(--sp-4);
+      color: var(--clr-text-secondary);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 2px solid rgba(6, 182, 212, 0.15);
+      border-top-color: var(--clr-primary-light);
+      border-right-color: var(--clr-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.25));
+      color: var(--clr-primary-light);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all var(--dur-fast);
+    }
+    .user-avatar:hover {
+      border-color: var(--clr-primary-light);
+      box-shadow: 0 0 18px rgba(6, 182, 212, 0.45);
+      transform: translateY(-1px);
+    }
+
+    /* Theme Switcher Toggle Button */
+    .theme-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      background: var(--glass-bg-subtle);
+      border: var(--glass-border);
+      color: var(--clr-text);
+      cursor: pointer;
+      transition: all var(--dur-fast);
+    }
+    .theme-toggle-btn:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-bright);
+      color: var(--clr-primary-light);
+      transform: rotate(15deg);
+    }
+
+    .mobile-only { display: none; }
+    @media (max-width: 768px) {
+      .mobile-only { display: flex; }
+      .sidebar { position: fixed; left: -100%; transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 200; }
+      .sidebar.open { left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- DYNAMIC AMBIENT DRIFTING ORBS                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="ambient-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- APP SHELL                                               -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="app-shell">
+
+    <!-- ── FROSTED SPATIAL SIDEBAR ───────────────────────── -->
+    <aside id="sidebar" class="sidebar">
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="logo">
+          <img src="warehouse-logo.jpg" alt="WarehouseOS Logo" width="24" height="24" style="border-radius: 6px; filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.4));" />
+          <div class="logo-text">
+            <span class="logo-name">WarehouseOS</span>
+            <span class="logo-sub">Spatial Intelligence</span>
+          </div>
+        </div>
+        <button id="sidebar-collapse-btn" class="sidebar-collapse" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search Console -->
+      <div class="sidebar-search">
+        <div class="search-input-wrap">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <input type="search" id="global-search" placeholder="Search orders, SKUs, bins…" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav id="sidebar-nav" class="sidebar-nav" role="navigation" aria-label="Main navigation">
+        <!-- Injected dynamically by app.js -->
+      </nav>
+
+      <!-- Footer User Profile with Admin Access & ➕ Add Staff Button -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="WarehouseApp.openAdminModal()" style="cursor:pointer" title="Click to open Admin Controls & Security Settings">
+          <div class="user-avatar-sm" style="background:linear-gradient(135deg, rgba(168,85,247,0.3), rgba(6,182,212,0.3));color:#C084FC;border-color:rgba(168,85,247,0.5)">VG</div>
+          <div class="user-info">
+            <div class="flex items-center gap-1">
+              <span class="user-name">Veera Govind</span>
+              <span class="badge badge-purple" style="font-size:8px;padding:0 4px">ADMIN</span>
+            </div>
+            <span class="user-role">Operations Director</span>
+          </div>
+          <div class="user-status-dot" title="Admin Active"></div>
+        </div>
+
+        <!-- Last Line of Web Option: ➕ Add New Staff Quick Button & Account Switcher -->
+        <div class="mt-2 pt-2 flex flex-col gap-1.5" style="border-top:1px solid rgba(255,255,255,0.06)">
+          <button class="btn btn-secondary btn-xs w-full font-bold flex items-center justify-center gap-1.5" 
+                  onclick="StaffModule.openAddStaffModal()" 
+                  title="Onboard and add a new operator / picker to floor roster"
+                  style="border-color:rgba(6,182,212,0.35);color:#38BDF8;background:rgba(6,182,212,0.08)">
+            <span>➕</span>
+            <span>Add New Staff</span>
+          </button>
+          
+          <div class="flex items-center justify-between text-xs text-muted pt-1 px-1" style="font-size:10px">
+            <button class="btn-link text-muted hover:text-primary" onclick="AuthModule.openAuthModal('login')" title="Switch to another account or login as Admin">
+              🔄 Switch User
+            </button>
+            <button class="btn-link text-muted hover:text-danger" onclick="AuthModule.logout()" title="Sign out of current session">
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN AREA ──────────────────────────────────────── -->
+    <main id="main" class="main-area">
+
+      <!-- TOP GLASS BAR -->
+      <header id="top-bar" class="top-bar">
+        <!-- Breadcrumb -->
+        <div class="top-bar-breadcrumb">
+          <button id="mobile-menu-btn" class="btn btn-ghost icon-btn mobile-only" aria-label="Toggle menu">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <nav aria-label="Breadcrumb">
+            <ol id="breadcrumb" class="breadcrumb"></ol>
+          </nav>
+        </div>
+
+        <!-- Live Metric Stream Capsule -->
+        <div id="top-bar-stats"></div>
+
+        <!-- Actions -->
+        <div class="top-bar-actions">
+          <!-- Dark / Light Screen Toggle Button -->
+          <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark / Light Mode" title="Switch Theme (Dark / Light)">
+            <svg id="theme-icon-sun" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg id="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <button id="alert-trigger-btn" class="btn btn-ghost icon-btn alert-bell"
+            aria-label="View alerts" title="View Alerts" onclick="Router.go('/alerts')">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2a5 5 0 0 1 5 5v3l1.5 2.5H2.5L4 10V7a5 5 0 0 1 5-5Z"
+                stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M7 13.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span id="alert-badge" class="alert-badge hidden">0</span>
+          </button>
+
+          <button class="btn btn-ghost icon-btn" aria-label="Refresh data" title="Sync Telemetry" id="refresh-btn">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path d="M13.65 3.35A7 7 0 1 0 15 8h-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 3v5h-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="btn btn-secondary btn-xs font-bold flex items-center gap-1" 
+                  onclick="Router.go('/video-guide')" 
+                  title="Watch Step-by-Step Video Walkthrough"
+                  style="border-color:rgba(6,182,212,0.45);color:#38BDF8;background:rgba(6,182,212,0.12);padding:4px 10px;font-size:11px">
+            <span>🎬</span>
+            <span>How to Run Video</span>
+          </button>
+
+          <button class="btn btn-secondary btn-xs font-bold flex items-center gap-1" 
+                  onclick="Router.go('/login')" 
+                  title="Open Dedicated Login & Registration Gateway"
+                  style="border-color:rgba(168,85,247,0.4);color:#C084FC;background:rgba(168,85,247,0.1);padding:4px 10px;font-size:11px">
+            <span>🔐</span>
+            <span>Login / Register</span>
+          </button>
+
+          <div class="user-avatar" aria-label="Active User Profile" title="Click for Admin Controls & Security" onclick="WarehouseApp.openAdminModal()" style="cursor:pointer">VG</div>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT VIEWPORT -->
+      <div class="content-area">
+        <div id="page-content">
+          <div class="page-loading">
+            <div class="spinner"></div>
+            <span>Loading WarehouseOS Spatial Stream…</span>
+          </div>
+      </div>
+
+      <!-- ─── ANIMATED LIVE TIME & DATE CORNER HUD ───────── -->
+      <div id="corner-time-hud" class="corner-time-hud" role="status" aria-live="off">
+        <div class="corner-time-row">
+          <span class="corner-live-dot" title="Live Clock Sync Active"></span>
+          <span id="live-time-display" class="live-time-clock">12:00:00</span>
+          <span id="live-ampm-display" class="live-time-ampm">PM</span>
+          <span class="corner-tz-badge">LIVE IST</span>
+        </div>
+        <div class="corner-date-row">
+          <span id="live-date-display">Monday, Aug 17, 2026</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ─── FROSTED GLASS MODAL OVERLAY ───────────────────── -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div id="modal" class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title"></h3>
+        <button id="modal-close-btn" class="modal-close" aria-label="Close modal">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-footer" class="modal-footer hidden"></div>
+    </div>
+  </div>
+
+  <!-- ─── CONFIRM DIALOG ────────────────────────────────── -->
+  <div id="confirm-overlay" class="modal-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="confirm-title" class="modal-title">Confirm Action</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="confirm-ok-btn" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TOAST NOTIFICATIONS ───────────────────────────── -->
+  <div id="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+  <!-- ─── THREE.JS & ORBIT CONTROLS ─────────────────────── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- ─── SCRIPTS ──────────────────────────────────────── -->
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/modules/inventory.js"></script>
+  <script src="js/modules/orders.js"></script>
+  <script src="js/modules/allocation.js"></script>
+  <script src="js/modules/picking.js"></script>
+  <script src="js/modules/alerts.js"></script>
+  <script src="js/modules/dispatch.js"></script>
+  <script src="js/modules/analytics.js"></script>
+  <script src="js/modules/warehouseMap.js"></script>
+  <script src="js/modules/copilot.js"></script>
+  <script src="js/modules/ar.js"></script>
+  <script src="js/modules/cdcPipeline.js"></script>
+  <script src="js/modules/markovPredictor.js"></script>
+  <script src="js/modules/dataIntelligence.js"></script>
+  <script src="js/modules/staff.js"></script>
+  <script src="js/modules/auth.js"></script>
+  <script src="js/modules/videoGuide.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- ─── DYNAMIC THEME & GLASSMORPHISM INTERACTIONS ──── -->
+  <script>
+  // Theme Switcher Management
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const sunIcon = document.getElementById('theme-icon-sun');
+  const moonIcon = document.getElementById('theme-icon-moon');
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('warehouseos_theme', theme);
+    if (theme === 'light') {
+      sunIcon.classList.remove('hidden');
+      moonIcon.classList.add('hidden');
+      themeToggleBtn.setAttribute('title', 'Switch to Dark Screen');
+    } else {
+      sunIcon.classList.add('hidden');
+      moonIcon.classList.remove('hidden');
+      themeToggleBtn.setAttribute('title', 'Switch to Light Screen');
+    }
+  }
+
+  // Load saved theme or default to dark
+  const savedTheme = localStorage.getItem('warehouseos_theme') || 'dark';
+  applyTheme(savedTheme);
+
+  themeToggleBtn?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+    if (window.Utils?.Toast) {
+      window.Utils.Toast.info(`Switched to ${newTheme.toUpperCase()} SCREEN mode`, '', 2000);
+    }
+  });
+
+  // Button ripple effect
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn');
+    if (!btn || btn.disabled) return;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.2;
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top  - size / 2;
+    const ripple = document.createElement('span');
+    ripple.className = 'btn-ripple';
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px;`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 550);
+  });
+
+  // KPI card 3D perspective tilt
+  document.addEventListener('mousemove', function(e) {
+    document.querySelectorAll('.kpi-card').forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const dx = (e.clientX - cx) / (rect.width  / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 1.8) {
+        card.style.transform = `translateY(-4px) rotateX(${-dy*3.5}deg) rotateY(${dx*3.5}deg)`;
+      } else {
+        card.style.transform = '';
+      }
+    });
+  });
+
+  // Reset tilt on mouse leave
+  document.querySelector('.content-area')?.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.kpi-card').forEach(card => card.style.transform = '');
+  });
+
+  // Animated number count-up for KPI values
+  function animateCounter(el) {
+    const text = el.textContent.trim();
+    const match = text.match(/^([^\d]*)([\d,\.]+)(.*)$/);
+    if (!match) return;
+    const [, prefix, numStr, suffix] = match;
+    const target = parseFloat(numStr.replace(/,/g, ''));
+    if (isNaN(target) || target === 0) return;
+    let start = null;
+    const duration = 750;
+    function step(ts) {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(ease * target);
+      el.textContent = prefix + current.toLocaleString() + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // MutationObserver for newly rendered KPI elements
+  const kpiObserver = new MutationObserver(mutations => {
+    mutations.forEach(m => m.addedNodes.forEach(node => {
+      if (node.nodeType !== 1) return;
+      node.querySelectorAll?.('.kpi-value').forEach(animateCounter);
+    }));
+  });
+  const contentEl = document.getElementById('page-content');
+  if (contentEl) kpiObserver.observe(contentEl, { childList: true, subtree: true });
+  </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarehouseOS — Video Walkthrough & Control</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    body { background: #0b0f19; color: #f8fafc; height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+    
+    .video-container {
+      position: relative; width: 80vw; max-width: 900px; aspect-ratio: 16/9;
+      background: #1e293b; border-radius: 12px; overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .placeholder-overlay {
+      position: absolute; inset: 0; background: radial-gradient(circle, rgba(15,23,42,0.8) 0%, rgba(11,15,25,0.95) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      transition: opacity 0.3s ease;
+    }
+    .placeholder-overlay.hidden { opacity: 0; pointer-events: none; }
+    
+    .play-btn {
+      background: #0284c7; color: white; border: none; border-radius: 50%;
+      width: 72px; height: 72px; font-size: 1.5rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(2, 132, 199, 0.6); transition: transform 0.2s, background 0.2s;
+    }
+    .play-btn:hover { background: #0369a1; transform: scale(1.08); }
+
+    .control-bar {
+      margin-top: 20px; display: flex; gap: 16px; align-items: center;
+      background: rgba(15, 23, 42, 0.85); padding: 12px 24px; border-radius: 30px;
+      border: 1px solid #334155; backdrop-filter: blur(10px);
+    }
+
+    .btn-toggle {
+      background: #1e293b; color: #f8fafc; border: 1px solid #475569;
+      padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; gap: 8px; transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-toggle:hover { background: #334155; border-color: #38bdf8; }
+    .btn-toggle.active { background: #0284c7; border-color: #38bdf8; color: white; box-shadow: 0 0 12px rgba(2, 132, 199, 0.4); }
+
+    .status-indicator { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
+    .status-dot.playing { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <!-- Replace src with your actual video asset if needed -->
+    <video id="walkthroughVideo" src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" preload="metadata"></video>
+    
+    <div id="overlay" class="placeholder-overlay">
+      <button class="play-btn" onclick="togglePlay()">▶</button>
+      <div style="color: #94a3b8; font-size: 0.9rem;">WarehouseOS Interactive Video Walkthrough</div>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <button id="mainToggleBtn" class="btn-toggle" onclick="togglePlay()">
+      <span id="btnIcon">▶</span> <span id="btnText">Play Video</span>
+    </button>
+    <div class="status-indicator">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">Paused</span>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('walkthroughVideo');
+    const overlay = document.getElementById('overlay');
+    const mainToggleBtn = document.getElementById('mainToggleBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnText = document.getElementById('btnText');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    function togglePlay() {
+      if (video.paused) {
+        video.play();
+        overlay.classList.add('hidden');
+        mainToggleBtn.classList.add('active');
+        btnIcon.textContent = '⏸';
+        btnText.textContent = 'Pause Video';
+        statusDot.classList.add('playing');
+        statusText.textContent = 'Playing Walkthrough';
+      } else {
+        video.pause();
+        overlay.classList.remove('hidden');
+        mainToggleBtn.classList.remove('active');
+        btnIcon.textContent = '▶';
+        btnText.textContent = 'Play Video';
+        statusDot.classList.remove('playing');
+        statusText.textContent = 'Paused';
+      }
+    }
+
+    video.addEventListener('ended', () => {
+      overlay.classList.remove('hidden');
+      mainToggleBtn.classList.remove('active');
+      btnIcon.textContent = '▶';
+      btnText.textContent = 'Play Video';
+      statusDot.classList.remove('playing');
+      statusText.textContent = 'Ended';
+    });
+  </script>
+
+</body>
+</html>

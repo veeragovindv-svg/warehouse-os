@@ -1,0 +1,113 @@
+/* ============================================================
+   WarehouseOS — typography.css (Clean Minimalist Bento Typography)
+   UI, Headings & Text: Inter (Vercel / Linear Style)
+   IDs & Technical Metrics: JetBrains Mono
+   ============================================================ */
+
+/* ─── GLOBAL TYPEFACE RULES ──────────────────────────────── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* ─── SECTION HEADERS ────────────────────────────────────── */
+.section-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+  color: var(--clr-text);
+}
+
+.section-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--clr-text-secondary);
+}
+
+/* ─── CARD HEADERS ───────────────────────────────────────── */
+.card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: var(--clr-text);
+}
+
+/* ─── KPI METRICS ────────────────────────────────────────── */
+.kpi-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--clr-text-secondary);
+}
+
+.kpi-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  color: var(--clr-text);
+  line-height: 1.1;
+  font-feature-settings: "tnum" 1;
+}
+
+.kpi-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--clr-text-muted);
+}
+
+/* ─── MONOSPACE IDS & TRACKING CODES ─────────────────────── */
+.col-sku,
+.tracking-id,
+.pipeline-card-id,
+.pick-bin-tag,
+.movement-tag,
+.ar-bin-id,
+.product-row-zone,
+.top-stat-value,
+.order-item-qty,
+.nav-badge,
+.pipeline-count,
+.bottleneck-time,
+code, kbd,
+[class*="id-"],
+[class*="-mono"] {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ─── TABLE DATA ─────────────────────────────────────────── */
+.data-table th {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.data-table td {
+  font-feature-settings: "tnum" 1;
+}
+
+/* ─── BUTTONS ────────────────────────────────────────────── */
+.btn {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+/* ─── MODALS ─────────────────────────────────────────────── */
+.modal-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* ─── EMPTY STATE ────────────────────────────────────────── */
+.empty-state h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+.empty-state p {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}

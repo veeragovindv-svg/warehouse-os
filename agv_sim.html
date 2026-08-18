@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarehouseOS — AGV Fleet with Delivery ETA & Delay Tracking</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    body { background: #0b0f19; color: #f8fafc; overflow: hidden; height: 100vh; width: 100vw; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    
+    /* Control Overlay */
+    .hud-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      width: 380px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .hud-panel h2 {
+      font-size: 1.05rem;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .hud-panel h2 span {
+      font-size: 0.7rem;
+      background: #0284c7;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .fleet-card {
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .fleet-card.delayed { border-color: #eab308; }
+    .fleet-card.critical { border-color: #ef4444; background: rgba(69, 10, 10, 0.35); }
+    .fleet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .fleet-card .name { font-weight: bold; font-size: 0.85rem; color: #f1f5f9; }
+    .sla-badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .sla-ontime { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+    .sla-delay { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+    .sla-critical { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .telemetry-row strong { color: #e2e8f0; }
+
+    .battery-bar {
+      width: 100%;
+      height: 5px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 4px 0 8px 0;
+    }
+    .battery-fill { height: 100%; background: #22c55e; transition: width 0.3s; }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .btn-small {
+      border: none;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-dispatch { background: #0284c7; color: white; }
+    .btn-dispatch:hover { background: #0369a1; }
+    .btn-delay { background: #334155; color: #fbbf24; border: 1px solid #475569; }
+    .btn-delay:hover { background: #475569; color: #fef08a; }
+
+    .quick-actions {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-action {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #475569;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+    }
+    .btn-action:hover { background: #334155; color: white; }
+
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  
+  <div class="hud-panel">
+    <h2>⚡ Order SLA & Fleet Telemetry <span>LIVE</span></h2>
+    <div id="fleet-list"></div>
+    <div class="quick-actions">
+      <button class="btn-action" onclick="dispatchAllRandom()">🎲 Batch Dispatch</button>
+      <button class="btn-action" onclick="resetFleet()">🔄 Recall to Dock</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    🟦 Racks (Obstacles) &nbsp;|&nbsp; ⚡ Docks &nbsp;|&nbsp; 🟢 On-Time &nbsp;|&nbsp; 🟡 Delay Warning &nbsp;|&nbsp; 🔴 SLA Breached
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // --- 1. SPACE-TIME A* PATHFINDER ---
+    class SpaceTimeGrid {
+      constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.staticObstacles = new Uint8Array(width * height);
+        this.reservations = new Map();
+      }
+
+      setObstacle(x, z, val = 1) {
+        if (x >= 0 && x < this.width && z >= 0 && z < this.height) {
+          this.staticObstacles[z * this.width + x] = val;
+        }
+      }
+
+      isBlocked(x, z, t, agentId) {
+        if (x < 0 || x >= this.width || z < 0 || z >= this.height) return true;
+        if (this.staticObstacles[z * this.width + x] === 1) return true;
+        const res = this.reservations.get(`${x},${z},${t}`);
+        return res !== undefined && res !== agentId;
+      }
+
+      reserve(agentId, path) {
+        this.clear(agentId);
+        for (const step of path) {
+          this.reservations.set(`${step.x},${step.z},${step.t}`, agentId);
+        }
+      }
+
+      clear(agentId) {
+        for (const [key, id] of this.reservations.entries()) {
+          if (id === agentId) this.reservations.delete(key);
+        }
+      }
+
+      findPath(start, goal, startTime, agentId) {
+        const startNode = { x: start.x, z: start.z, t: startTime, g: 0, h: Math.hypot(goal.x - start.x, goal.z - start.z), parent: null };
+        const open = [startNode];
+        const closed = new Set();
+        const dirs = [
+          { dx: 0, dz: 0 },
+          { dx: 1, dz: 0 }, { dx: -1, dz: 0 },
+          { dx: 0, dz: 1 }, { dx: 0, dz: -1 }
+        ];
+
+        while (open.length > 0) {
+          open.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+          const curr = open.shift();
+
+          if (curr.x === goal.x && curr.z === goal.z) {
+            const path = [];
+            let p = curr;
+            while (p) {
+              path.unshift({ x: p.x, z: p.z, t: p.t });
+              p = p.parent;
+            }
+            return path;
+          }
+
+          const key = `${curr.x},${curr.z},${curr.t}`;
+          if (closed.has(key)) continue;
+          closed.add(key);
+
+          if (curr.t - startTime > 100) continue;
+
+          for (const d of dirs) {
+            const nx = curr.x + d.dx, nz = curr.z + d.dz, nt = curr.t + 1;
+            if (this.isBlocked(nx, nz, nt, agentId)) continue;
+            const cost = (d.dx === 0 && d.dz === 0) ? 0.7 : 1.0;
+            open.push({
+              x: nx, z: nz, t: nt,
+              g: curr.g + cost,
+              h: Math.hypot(goal.x - nx, goal.z - nz),
+              parent: curr
+            });
+          }
+        }
+        return null;
+      }
+    }
+
+    // --- 2. THREE.JS SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f19);
+    scene.fog = new THREE.FogExp2(0x0b0f19, 0.025);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(16, 26, 32);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(12, 0, 12);
+    controls.update();
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+    const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    const gridHelper = new THREE.GridHelper(30, 30, 0x0284c7, 0x1e293b);
+    gridHelper.position.set(14.5, 0, 14.5);
+    scene.add(gridHelper);
+
+    const grid = new SpaceTimeGrid(30, 30);
+    const rackGeo = new THREE.BoxGeometry(0.8, 1.6, 0.8);
+    const rackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
+
+    function addRackBlock(startX, endX, startZ, endZ) {
+      for (let x = startX; x <= endX; x++) {
+        for (let z = startZ; z <= endZ; z++) {
+          grid.setObstacle(x, z, 1);
+          const mesh = new THREE.Mesh(rackGeo, rackMat);
+          mesh.position.set(x, 0.8, z);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          scene.add(mesh);
+        }
+      }
+    }
+
+    addRackBlock(4, 10, 4, 6);
+    addRackBlock(14, 20, 4, 6);
+    addRackBlock(4, 10, 12, 14);
+    addRackBlock(14, 20, 12, 14);
+    addRackBlock(4, 10, 20, 22);
+    addRackBlock(14, 20, 20, 22);
+
+    const chargeMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, wireframe: true });
+    for (let z = 1; z <= 3; z++) {
+      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), chargeMat);
+      pad.rotation.x = -Math.PI / 2;
+      pad.position.set(1, 0.02, z);
+      scene.add(pad);
+    }
+
+    // --- 3. AGV FLEET WITH DELIVERY ETA & TIME DELAY TRACKING ---
+    class SimAGV {
+      constructor(id, color, initX, initZ) {
+        this.id = id;
+        this.pos = { x: initX, z: initZ };
+        this.dock = { x: 1, z: initZ };
+        this.state = 'IDLE';
+        this.battery = 100;
+        this.speed = 0;
+
+        // SLA, Delivery Time & Delay Tracking
+        this.orderId = null;
+        this.dispatchTime = null;
+        this.originalEtaSeconds = 0;
+        this.remainingSeconds = 0;
+        this.totalDelaySeconds = 0;
+        this.delayFreezeTimer = 0; // Active pause countdown in seconds
+
+        // 3D Chassis
+        this.group = new THREE.Group();
+        const chassis = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 0.3, 0.8),
+          new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.7 })
+        );
+        chassis.position.y = 0.15;
+        this.group.add(chassis);
+
+        this.light = new THREE.PointLight(color, 1, 3);
+        this.light.position.y = 0.4;
+        this.group.add(this.light);
+
+        this.group.position.set(initX, 0, initZ);
+        scene.add(this.group);
+
+        this.curve = null;
+        this.progress = 0;
+        this.trail = null;
+      }
+
+      setMission(waypoints, orderName) {
+        if (!waypoints || waypoints.length < 2) return;
+        const pts = [];
+        for (const wp of waypoints) {
+          const v = new THREE.Vector3(wp.x, 0.1, wp.z);
+          if (pts.length === 0 || !pts[pts.length - 1].equals(v)) pts.push(v);
+        }
+        if (pts.length < 2) return;
+
+        this.curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
+        this.progress = 0;
+        this.state = 'EN_ROUTE';
+        this.orderId = orderName || `ORD-#${Math.floor(1000 + Math.random() * 9000)}`;
+        this.totalDelaySeconds = 0;
+        this.delayFreezeTimer = 0;
+
+        // Estimate ETA based on spline curve distance
+        const totalDistance = this.curve.getLength();
+        const averageSpeed = 2.8; // m/s
+        this.originalEtaSeconds = Math.round(totalDistance / (averageSpeed * 0.12));
+        this.remainingSeconds = this.originalEtaSeconds;
+        this.dispatchTime = new Date();
+
+        if (this.trail) scene.remove(this.trail);
+        const geo = new THREE.BufferGeometry().setFromPoints(this.curve.getPoints(50));
+        const mat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
+        this.trail = new THREE.Line(geo, mat);
+        scene.add(this.trail);
+      }
+
+      injectDelay(seconds, reason = 'Aisle Traffic') {
+        if (this.state !== 'EN_ROUTE') return;
+        this.totalDelaySeconds += seconds;
+        this.delayFreezeTimer += seconds;
+        this.remainingSeconds += seconds;
+      }
+
+      getEstimatedDeliveryTime() {
+        if (!this.dispatchTime || this.state !== 'EN_ROUTE') return '—';
+        const deliveryTimestamp = new Date(this.dispatchTime.getTime() + (this.originalEtaSeconds + this.totalDelaySeconds) * 1000);
+        return deliveryTimestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+
+      update(delta) {
+        if (this.state === 'EN_ROUTE' && this.curve) {
+          // Check for active delay pause (simulating congestion or safety hold)
+          if (this.delayFreezeTimer > 0) {
+            this.delayFreezeTimer -= delta;
+            this.speed = 0;
+            this.light.color.setHex(0xeab308); // Turn light yellow during hold
+            return;
+          } else {
+            this.light.color.setHex(0x38bdf8);
+          }
+
+          this.progress += delta * 0.04;
+          this.remainingSeconds = Math.max(0, (1 - this.progress) * this.originalEtaSeconds + this.delayFreezeTimer);
+          this.battery = Math.max(0, this.battery - delta * 0.5);
+          this.speed = 2.8;
+
+          if (this.progress >= 1.0) {
+            this.progress = 1.0;
+            this.state = 'COMPLETED';
+            this.speed = 0;
+            this.remainingSeconds = 0;
+            this.pos.x = Math.round(this.group.position.x);
+            this.pos.z = Math.round(this.group.position.z);
+            if (this.trail) {
+              scene.remove(this.trail);
+              this.trail = null;
+            }
+            setTimeout(() => {
+              if (this.state === 'COMPLETED') this.state = 'IDLE';
+            }, 3000);
+          } else {
+            const pt = this.curve.getPointAt(this.progress);
+            this.group.position.copy(pt);
+            const tan = this.curve.getTangentAt(this.progress);
+            this.group.rotation.y = Math.atan2(tan.x, tan.z);
+          }
+        }
+      }
+    }
+
+    const fleet = [
+      new SimAGV('AGV-01', 0x0284c7, 1, 1),
+      new SimAGV('AGV-02', 0x38bdf8, 1, 2),
+      new SimAGV('AGV-03', 0x818cf8, 1, 3)
+    ];
+
+    // --- 4. DISPATCH & DELAY CONTROLLER ---
+    window.dispatchAGV = function(index, targetX, targetZ) {
+      const agv = fleet[index];
+      const path = grid.findPath(agv.pos, { x: targetX, z: targetZ }, 0, agv.id);
+      if (path) {
+        grid.reserve(agv.id, path);
+        agv.setMission(path, `ORD-#${1000 + Math.floor(Math.random() * 8999)}`);
+      }
+    };
+
+    window.addDelay = function(index, seconds) {
+      fleet[index].injectDelay(seconds);
+    };
+
+    window.dispatchAllRandom = function() {
+      const targets = [{ x: 12, z: 5 }, { x: 12, z: 13 }, { x: 12, z: 21 }, { x: 22, z: 13 }];
+      fleet.forEach((agv, i) => {
+        const t = targets[i % targets.length];
+        window.dispatchAGV(i, t.x, t.z);
+      });
+    };
+
+    window.resetFleet = function() {
+      fleet.forEach((agv, i) => {
+        const path = grid.findPath(agv.pos, agv.dock, 0, agv.id);
+        if (path) {
+          grid.reserve(agv.id, path);
+          agv.setMission(path, 'DOCK_RETURN');
+        }
+      });
+    };
+
+    // Update UI HUD
+    const fleetListEl = document.getElementById('fleet-list');
+    function updateHUD() {
+      fleetListEl.innerHTML = fleet.map((agv, i) => {
+        let slaClass = 'sla-ontime';
+        let slaText = 'ON TIME';
+        if (agv.totalDelaySeconds >= 8) {
+          slaClass = 'sla-critical';
+          slaText = `CRITICAL (+${agv.totalDelaySeconds}s)`;
+        } else if (agv.totalDelaySeconds > 0) {
+          slaClass = 'sla-delay';
+          slaText = `DELAYED (+${agv.totalDelaySeconds}s)`;
+        }
+
+        const isHolding = agv.delayFreezeTimer > 0;
+
+        return `
+          <div class="fleet-card ${agv.totalDelaySeconds >= 8 ? 'critical' : (agv.totalDelaySeconds > 0 ? 'delayed' : '')}">
+            <div class="fleet-header">
+              <span class="name">${agv.id} ${agv.orderId ? `<small style="color:#94a3b8">(${agv.orderId})</small>` : ''}</span>
+              <span class="sla-badge ${slaClass}">${slaText}</span>
+            </div>
+            <div class="telemetry-row">
+              <div>State: <strong>${isHolding ? '⚠️ TRAFFIC HOLD' : agv.state}</strong></div>
+              <div>Speed: <strong>${agv.speed.toFixed(1)} m/s</strong></div>
+              <div>Delivery ETA: <strong>${agv.getEstimatedDeliveryTime()}</strong></div>
+              <div>Time Left: <strong>${Math.ceil(agv.remainingSeconds)}s</strong></div>
+            </div>
+            <div class="battery-bar"><div class="battery-fill" style="width:${agv.battery}%"></div></div>
+            <div class="card-actions">
+              <button class="btn-small btn-dispatch" onclick="dispatchAGV(${i}, ${Math.floor(Math.random()*8+12)}, ${Math.floor(Math.random()*15+4)})">Dispatch</button>
+              <button class="btn-small btn-delay" onclick="addDelay(${i}, 5)" title="Simulate +5s traffic delay">+5s Delay</button>
+              <button class="btn-small btn-delay" style="color:#ef4444;" onclick="addDelay(${i}, 10)" title="Simulate +10s block">+10s E-Stop</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- 5. ANIMATION LOOP ---
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      fleet.forEach(agv => agv.update(delta));
+      updateHUD();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
