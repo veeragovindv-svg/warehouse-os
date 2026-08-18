@@ -146,12 +146,27 @@ const Utils = (() => {
       const toastEl = document.createElement('div');
       toastEl.className = `toast ${type}`;
       toastEl.setAttribute('role', 'alert');
-      toastEl.innerHTML = `
-        <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
-        <div class="toast-content">
-          <div class="toast-title">${title}</div>
-          ${message ? `<div class="toast-message">${message}</div>` : ''}
-        </div>`;
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'toast-icon';
+      iconSpan.textContent = icons[type] || 'ℹ️';
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'toast-content';
+
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'toast-title';
+      titleDiv.textContent = title;
+      contentDiv.appendChild(titleDiv);
+
+      if (message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'toast-message';
+        messageDiv.textContent = message;
+        contentDiv.appendChild(messageDiv);
+      }
+
+      toastEl.appendChild(iconSpan);
+      toastEl.appendChild(contentDiv);
 
       toastEl.onclick = () => dismiss(toastEl);
       container().appendChild(toastEl);

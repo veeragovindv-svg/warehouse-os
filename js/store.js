@@ -48,7 +48,7 @@ const Store = (() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
-      console.warn('WarehouseOS: Could not save state to localStorage', e);
+
     }
   }
 
@@ -62,7 +62,7 @@ const Store = (() => {
         return true;
       }
     } catch (e) {
-      console.warn('WarehouseOS: Could not load state from localStorage', e);
+
     }
     return false;
   }

@@ -546,8 +546,7 @@
       // Start 1-second live animated time & date clock
       startLiveClockUpdater();
 
-      console.log('%c WarehouseOS', 'color:#4a9eff;font-size:18px;font-weight:800;');
-      console.log('%c Smart Warehouse Operations Platform v1.0', 'color:#8899aa');
+
     },
 
     resetData() {
